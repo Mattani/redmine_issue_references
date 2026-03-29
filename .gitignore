@@ -1,0 +1,38 @@
+# Ruby
+*.gem
+*.rbc
+.bundle
+.config
+coverage
+InstalledFiles
+lib/bundler/man
+pkg
+rdoc
+spec/reports
+test/tmp
+test/version_tmp
+tmp
+*.log
+
+# YARD artifacts
+.yardoc
+_yardoc
+doc/
+
+# IDE
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# RuboCop output
+rubocop_output.txt
+
+# Rails test output
+rails_test_output.txt
+node_modules/
+.eslintcache

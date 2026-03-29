@@ -1,0 +1,73 @@
+AllCops:
+  NewCops: enable
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  TargetRubyVersion: 2.7
+
+  Exclude:
+    - '**/vendor/**/*'
+    - '**/tmp/**/*'
+    - '**/bin/**/*'
+    - '**/extra/**/*'
+    - '**/lib/generators/**/templates/*'
+    - '**/lib/tasks/**/*'
+    - '**/files/**/*'
+    - '**/test/**/*'
+    - '**/db/migrate/*'
+    - 'db/schema.rb'
+    - 'scripts/*'
+
+plugins:
+  - rubocop-performance
+  - rubocop-rails
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+  Exclude:
+    - 'db/**/*.rb'
+    - 'Gemfile'
+    - 'Rakefile'
+
+Metrics/AbcSize:
+  Max: 25
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Max: 200
+  # CommonMarkParser contains many private helpers inside class << self.
+  # A slightly higher limit is acceptable for this single-responsibility class.
+  Exclude:
+    - 'lib/redmine_issue_references/parsers/common_mark_parser.rb'
+
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+Layout/LineLength:
+  Max: 120
+
+Style/Documentation:
+  Enabled: false
+
+Style/Encoding:
+  Enabled: false
+
+# Zeitwerk requires compact style for autoloading
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Layout/TrailingWhitespace:
+  AllowInHeredoc: true
+
+Rails/ApplicationRecord:
+  Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'test/**/*'
+
+Gemspec/RequireMFA:
+  Enabled: false
