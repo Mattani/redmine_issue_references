@@ -1,0 +1,111 @@
+<div class="issue-reference-settings">
+  <h3><%= l(:project_module_issue_reference) %></h3>
+  
+  <% if @project.module_enabled?(:issue_references) %>
+    <% @issue_reference_setting = IssueReferenceSetting.for_project(@project) %>
+    <%= form_tag project_issue_reference_setting_path(@project), method: :put do %>
+      
+      <div class="box tabular">
+        <!-- バッジ表示期間設定 -->
+        <p>
+          <label for="issue_reference_setting_badge_days"><%= l(:label_badge_days) %></label>
+          <%= number_field_tag 'issue_reference_setting[badge_days]', @issue_reference_setting.badge_days || 7, min: 0, max: 31, step: 1, style: 'width: 70px; text-align: right;' %>
+          <em class="info"><%= l(:text_badge_days_description) %></em>
+        </p>
+
+        <!-- コンテキストキーワード設定 -->
+        <p>
+          <label for="issue_reference_setting_context_keywords"><%= l(:label_context_keywords) %></label>
+          <%= text_area_tag 'issue_reference_setting[context_keywords]', @issue_reference_setting.try(:context_keywords), rows: 6, style: 'width: 60ch;' %>
+          <em class="info"><%= l(:text_context_keywords_description) %></em>
+        </p>
+
+        <!-- 見出しキーワード設定 -->
+        <p>
+          <label for="issue_reference_setting_heading_keywords"><%= l(:label_heading_keywords) %></label>
+          <%= text_area_tag 'issue_reference_setting[heading_keywords]', @issue_reference_setting.try(:heading_keywords), rows: 6, style: 'width: 60ch;' %>
+          <em class="info"><%= l(:text_heading_keywords_description) %></em>
+        </p>
+      </div>
+
+      <!-- 保存ボタン -->
+      <p><%= submit_tag l(:button_save), class: 'button' %></p>
+      
+    <% end %>
+  <% else %>
+    <div class="box">
+      <p class="nodata">
+        <%= l(:label_module_not_enabled) %>
+      </p>
+    </div>
+  <% end %>
+  
+  <div class="box">
+    <h4><%= l(:label_issue_reference_statistics) %></h4>
+    
+    <% if @project.module_enabled?(:issue_references) %>
+      <% 
+        total_references = IssueReference.joins(:wiki_page)
+                                       .where(wiki_pages: { wiki_id: @project.wiki.id })
+                                       .count rescue 0
+        
+        references_by_issue = IssueReference.joins(:wiki_page)
+                                         .where(wiki_pages: { wiki_id: @project.wiki.id })
+                                         .group(:issue_id)
+                                         .count rescue {}
+      %>
+      
+      <p>
+        <strong><%= l(:label_total_references) %>:</strong> <%= total_references %>
+      </p>
+      
+      <p>
+        <strong><%= l(:label_issues_with_references) %>:</strong> <%= references_by_issue.keys.count %>
+      </p>
+      
+      <% if total_references > 0 %>
+        <h4><%= l(:label_recent_references) %></h4>
+        <table class="list">
+          <thead>
+            <tr>
+              <th><%= l(:field_issue) %></th>
+              <th><%= l(:label_wiki_page) %></th>
+              <th><%= l(:field_updated_on) %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% 
+              recent_references = IssueReference.joins(:wiki_page)
+                                              .where(wiki_pages: { wiki_id: @project.wiki.id })
+                                              .includes(:issue, :wiki_page)
+                                              .order(updated_at: :desc)
+                                              .limit(10)
+            %>
+            <% recent_references.each do |reference| %>
+              <tr>
+                <td>
+                  <%= link_to "##{reference.issue_id}", issue_path(reference.issue) %>
+                  <%= h reference.issue.subject %>
+                </td>
+                <td>
+                  <%= link_to reference.wiki_page.title, 
+                              project_wiki_page_path(@project, reference.wiki_page.title) %>
+                </td>
+                <td><%= format_time(reference.updated_at) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    <% else %>
+      <p class="nodata">
+        <%= l(:label_module_not_enabled) %>
+      </p>
+    <% end %>
+  </div>
+  
+  <div class="box">
+    <h4><%= l(:label_issue_reference_description) %></h4>
+    <p><%= l(:text_issue_reference_description) %></p>
+  </div>
+</div></div>

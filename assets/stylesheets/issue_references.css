@@ -1,0 +1,115 @@
+.issue-references .reference-list[data-show-dismissed="false"] .reference-item.dismissed {
+  display: none;
+}
+
+.reference-item {
+  transition: opacity 0.45s ease, transform 0.45s ease, max-height 0.45s ease, margin 0.45s ease, padding 0.45s ease;
+  will-change: opacity, transform, max-height, margin, padding;
+}
+
+.reference-item.reference-dismiss-animating {
+  display: block !important;
+  overflow: hidden;
+}
+
+.reference-item.reference-dismissing {
+  opacity: 0;
+  transform: translateY(18px);
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.issue-references .reference-list[data-show-dismissed="true"] .reference-item.dismissed {
+  opacity: 1;
+  background-color: #e0e0e0 !important;
+  border-left-color: #888 !important;
+  color: inherit;
+}
+
+
+.reference-inline-actions {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.reference-badge {
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  margin-left: 6px;
+  color: #fff;
+}
+
+.reference-badge--new {
+  background-color: #b71c1c;
+}
+
+.reference-badge--updated {
+  background-color: #2e7d32;
+}
+
+.reference-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.reference-action-form {
+  display: inline-flex;
+}
+
+.reference-inline-form {
+  display: inline-flex;
+}
+
+.reference-action-hidden {
+  display: none !important;
+}
+
+button.issue-reference-action-button {
+  font-size: 0.8em;
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+button.issue-reference-action-button:hover,
+button.issue-reference-action-button:focus {
+  background-color: #f0f0f0;
+}
+
+button.issue-reference-action-button span {
+  pointer-events: none;
+}
+
+.issue-reference-controls button {
+  font-size: 0.85em;
+  padding: 4px 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #f8f8f8;
+  cursor: pointer;
+}
+
+.issue-reference-controls button:hover {
+  background: #e8e8e8;
+}
+
+.reference-count-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reference-count-summary .reference-dismissed-wrapper {
+  font-size: 0.85em;
+  color: #999;
+}

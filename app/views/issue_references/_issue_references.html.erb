@@ -1,0 +1,239 @@
+<%= stylesheet_link_tag 'issue_references', :plugin => 'redmine_issue_references' %>
+<%= javascript_include_tag 'issue_references', :plugin => 'redmine_issue_references' %>
+<script>
+  window.I18n = window.I18n || {};
+  window.I18n.label_filtered_count = '<%= l(:label_filtered_count) %>';
+  window.IssueReferences = window.IssueReferences || {};
+  window.IssueReferences.messages = Object.assign({}, window.IssueReferences.messages, {
+    dismissSuccess: '<%= j l(:notice_issue_reference_dismissed) %>',
+    restoreSuccess: '<%= j l(:notice_issue_reference_restored) %>',
+    actionError: '<%= j l(:error_issue_reference_action_failed) %>'
+  });
+</script>
+
+<%
+  total_reference_count = references.size
+  dismissed_reference_count = references.count(&:dismissed?)
+  visible_reference_count = total_reference_count - dismissed_reference_count
+  show_dismissed = false
+%>
+
+<div class="issue-references">
+  <hr />
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <h3 style="margin: 0;"><%= l(:label_issue_references) %></h3>
+      <span class="reference-count-summary"
+            style="font-size: 0.9em; color: #666;"
+            data-total-count="<%= total_reference_count %>"
+            data-visible-count="<%= visible_reference_count %>"
+            data-dismissed-count="<%= dismissed_reference_count %>">
+        <span class="reference-total-count"><%= total_reference_count %></span> <%= l(:label_reference_count) %>
+        <span class="reference-dismissed-wrapper"<%= ' style="display:none;"' if dismissed_reference_count.zero? %>>
+          (<span class="reference-dismissed-count"><%= dismissed_reference_count %></span> <%= l(:label_hidden_references_suffix) %>)
+        </span>
+        <span class="reference-filtered-count" style="display: none; color: #169; font-weight: bold;"></span>
+      </span>
+    </div>
+    <div class="issue-reference-controls" style="display: flex; gap: 10px; align-items: center;">
+      <button type="button" 
+          class="button issue-reference-transcribe" 
+          data-issue-id="<%= issue.id %>"
+          data-transcribe-text="<%= l(:button_transcribe_selected) %>"
+          data-transcribe-title="<%= l(:tooltip_transcribe_selected) %>"
+          data-copy-text="<%= l(:button_copy_selected) %>"
+          data-copy-title="<%= l(:tooltip_copy_selected) %>"
+          title="<%= l(:label_transcribe_selected_references) %>">
+        <%= l(:button_transcribe_selected) %>
+      </button>
+      <button type="button"
+              class="button issue-reference-toggle-dismissed"
+              data-target="issue-reference-list-<%= issue.id %>"
+              data-show-label="<%= l(:button_show_all_dismissed) %>"
+              data-hide-label="<%= l(:button_hide_dismissed) %>"
+              data-storage-key="issueReferenceShowDismissed_<%= issue.id %>"
+              aria-pressed="<%= show_dismissed ? 'true' : 'false' %>">
+        <%= l(:button_show_all_dismissed) %>
+      </button>
+      <span style="font-size: 0.9em; color: #666; display: flex; align-items: center; gap: 5px;">
+        <label for="issue-reference-filter-<%= issue.id %>" style="margin: 0;"><%= l(:label_filter) %>:</label>
+        <input type="text" 
+               id="issue-reference-filter-<%= issue.id %>" 
+               class="issue-reference-filter-input" 
+               data-target="issue-reference-list-<%= issue.id %>" 
+               placeholder="<%= l(:label_filter_placeholder) %>" 
+               style="font-size: 0.9em; padding: 2px 5px; width: 150px;" />
+        <button type="button" 
+                class="button issue-reference-filter-apply" 
+                data-target="issue-reference-list-<%= issue.id %>" 
+                data-input="issue-reference-filter-<%= issue.id %>" 
+                style="font-size: 0.9em; padding: 2px 8px; cursor: pointer;">
+          <%= l(:label_apply) %>
+        </button>
+        <button type="button" 
+                class="button issue-reference-filter-clear" 
+                data-target="issue-reference-list-<%= issue.id %>" 
+                data-input="issue-reference-filter-<%= issue.id %>" 
+                style="font-size: 0.9em; padding: 2px 8px; cursor: pointer;">
+          <%= l(:label_clear) %>
+        </button>
+      </span>
+      <span style="font-size: 0.9em; color: #666; display: flex; align-items: center; gap: 5px;">
+        <label for="issue-reference-sort-<%= issue.id %>" style="margin: 0;"><%= l(:label_sort_order) %>:</label>
+        <select id="issue-reference-sort-<%= issue.id %>" 
+                class="issue-reference-sort" 
+                data-target="issue-reference-list-<%= issue.id %>" 
+                style="font-size: 0.9em; 
+                       padding: 2px 20px 2px 6px; 
+                       cursor: pointer; 
+                       border: 1px solid #ccc; 
+                       border-radius: 3px; 
+                       background-color: #f5f5f5;
+                       background-image: url('<%= image_path('arrow_down.png') %>');
+                       background-repeat: no-repeat;
+                       background-position: right 5px center;
+                       -webkit-appearance: none;
+                       -moz-appearance: none;
+                       appearance: none;">
+          <option value="newest"><%= l(:label_sort_newest) %></option>
+          <option value="oldest"><%= l(:label_sort_oldest) %></option>
+          <option value="title_asc"><%= l(:label_sort_title_asc) %></option>
+          <option value="title_desc"><%= l(:label_sort_title_desc) %></option>
+        </select>
+      </span>
+      <a href="#" class="issue-reference-view-mode" 
+         data-target="issue-reference-list-<%= issue.id %>" 
+         data-mode="detailed"
+         data-label-detailed="<%= l(:label_detailed_view) %>"
+         data-label-compact="<%= l(:label_compact_view) %>"
+         title="<%= l(:label_switch_view_mode) %>">
+        <span class="mode-icon">▦</span> <%= l(:label_compact_view) %>
+      </a>
+      <a href="#" class="icon icon-collapsed issue-reference-toggle" 
+         data-target="issue-reference-list-<%= issue.id %>" 
+         data-label-collapse="<%= l(:label_collapse) %>"
+         data-label-expand="<%= l(:label_expand) %>"
+         title="<%= l(:label_collapse_expand) %>">
+        <%= l(:label_collapse) %>
+      </a>
+    </div>
+  </div>
+  
+    <div class="reference-list"
+      id="issue-reference-list-<%= issue.id %>"
+      style="display: block;"
+      data-view-mode="detailed"
+      data-show-dismissed="<%= show_dismissed ? 'true' : 'false' %>">
+    <% 
+      # プロジェクトの設定を取得
+      extraction_setting = IssueReferenceSetting.for_project(issue.project)
+    %>
+    <% references.each do |reference| %>
+       <div class="reference-item <%= 'dismissed' if reference.dismissed? %>" 
+         data-reference-id="<%= reference.id %>" 
+           data-updated-at="<%= reference.updated_at.to_i %>" 
+           data-wiki-title="<%= h(reference.wiki_page.title) %>" 
+           data-text-block="<%= h(reference.text_block) %>" 
+         data-dismissed="<%= reference.dismissed? %>"
+         data-dismiss-url="<%= dismiss_issue_reference_path(reference) %>"
+         data-restore-url="<%= restore_issue_reference_path(reference) %>"
+           style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-left: 3px solid #169; border-radius: 3px;">
+        
+        <!-- チェックボックス -->
+        <div style="display: flex; gap: 10px;">
+          <div style="padding-top: 2px;">
+            <input type="checkbox" 
+                   class="reference-checkbox" 
+                   data-reference-id="<%= reference.id %>"
+                   data-wiki-title="<%= h(reference.wiki_page.title) %>"
+                   data-wiki-url="<%= project_wiki_page_path(reference.wiki_page.project, reference.wiki_page.title) %>"
+                   data-text-block="<%= h(reference.text_block) %>"
+                   style="margin: 0; cursor: pointer;" />
+          </div>
+          <div style="flex: 1;">
+        <% badge = reference.badge_type(extraction_setting.badge_days) %>
+        <div class="reference-header" style="margin-bottom: 5px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <strong>
+              <%= link_to reference.wiki_page.title,
+                          project_wiki_page_path(reference.wiki_page.project, reference.wiki_page.title) %>
+              <% if badge == :new %>
+                <span class="reference-badge reference-badge--new">New</span>
+              <% elsif badge == :updated %>
+                <span class="reference-badge reference-badge--updated">Updated</span>
+              <% end %>
+            </strong>
+            <span class="reference-inline-actions">
+            <%= form_tag dismiss_issue_reference_path(reference),
+                         method: :post,
+                         class: "reference-action-form reference-inline-form reference-dismiss-form#{reference.dismissed? ? ' reference-action-hidden' : ''}",
+                         data: { reference_id: reference.id, action_type: 'dismiss', success_message: l(:notice_issue_reference_dismissed), error_message: l(:error_issue_reference_action_failed) } do %>
+              <button type="submit" class="issue-reference-action-button button" title="<%= l(:button_hide_reference) %>">
+                <%= l(:button_hide_reference) %>
+              </button>
+            <% end %>
+            <%= form_tag restore_issue_reference_path(reference),
+                         method: :post,
+                         class: "reference-action-form reference-inline-form reference-restore-form#{reference.dismissed? ? '' : ' reference-action-hidden'}",
+                         data: { reference_id: reference.id, action_type: 'restore', success_message: l(:notice_issue_reference_restored), error_message: l(:error_issue_reference_action_failed) } do %>
+              <button type="submit" class="issue-reference-action-button button" title="<%= l(:button_restore_reference) %>">
+                <%= l(:button_restore_reference) %>
+              </button>
+            <% end %>
+            </span>
+          </div>
+          <span class="reference-date" style="color: #999; font-size: 0.9em; display: block;">
+            <%= l(:label_issue_reference_updated, time: time_tag(reference.updated_at)).html_safe %>
+          </span>
+        </div>
+        
+        <!-- 詳細表示 -->
+        <div class="reference-detailed-view">
+          <% header_text = reference.extracted_data.is_a?(Hash) ? reference.extracted_data['header'].to_s : nil %>
+          <% if header_text && header_text.strip != '' %>
+            <div class="reference-header-block" style="padding: 2px 0; margin-bottom: 2px; font-size: 0.9em; color: #444;">
+              <%= simple_format(h(header_text), {}, wrapper_tag: 'div') %>
+            </div>
+          <% end %>
+
+          <div class="reference-content" style="padding: 2px 0 0 0; font-size: 0.95em;">
+            <%= textilizable(reference.text_block, :object => reference.wiki_page) %>
+          </div>
+        </div>
+        
+        <!-- 簡略表示 -->
+        <div class="reference-compact-view" style="display: none;">
+          <%
+            # 抽出: テキストブロック内で該当issueを含むすべての行を取得し、順序を保ったまま結合して表示する
+            lines = reference.text_block.to_s.split("\n")
+            matched_lines = lines.select { |line| line =~ /#\s?#{issue.id}(?!\d)/ }
+            snippet = if matched_lines.any?
+                        matched_lines.join("\n\n")
+                      else
+                        # 見つからない場合は最初の非空行を使う
+                        lines.find { |line| line.to_s.strip != '' } || lines.first
+                      end
+
+            if snippet
+              linked_text = h(snippet)
+              # チケット番号をリンク化(#123 → リンク)
+              linked_text = linked_text.gsub(/#(\d+)/) do |match|
+                issue_num = $1
+                link_to(match, issue_path(issue_num), class: 'issue')
+              end
+              # URLをリンク化
+              linked_text = linked_text.gsub(%r{(https?://[^\s<]+)}) do |url|
+                link_to(url, url, class: 'external')
+              end
+            end
+          %>
+          <div class="reference-text-block" style="padding: 5px 0; font-size: 0.9em; color: #555;">
+            <%= simple_format(linked_text.html_safe) if linked_text %>
+          </div>
+        </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
