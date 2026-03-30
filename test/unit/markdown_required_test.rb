@@ -8,6 +8,6 @@ class MarkdownImplementationRequirementTest < ActiveSupport::TestCase
     # Production-grade Markdown support requires the commonmarker gem.
     # This test asserts presence of the gem and will be GREEN in the current
     # environment where commonmarker is installed.
-    assert defined?(CommonMarker), "commonmarker gem must be installed to provide full Markdown parsing support"
+    assert HAVE_COMMONMARKER, "commonmarker gem must be installed to provide full Markdown parsing support"
   end
 end

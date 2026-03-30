@@ -816,4 +816,30 @@ console.log('issue_references.js loaded');
         }
       }, 5000);
     }  });
+
+  // ブラウザコンソールから呼び出せるクリーンアップ関数
+  // デモ・テスト用途: IssueReferences.clearLocalStorage() で全設定をリセット
+  window.IssueReferences = window.IssueReferences || {};
+  window.IssueReferences.clearLocalStorage = function() {
+    var removed = [];
+    var globalKeys = ['issueReferenceSort', 'issueReferenceViewMode', 'issueReferenceCollapsed'];
+    globalKeys.forEach(function(key) {
+      if (localStorage.getItem(key) !== null) {
+        localStorage.removeItem(key);
+        removed.push(key);
+      }
+    });
+    // issueReferenceFilter_{id} 形式のキーをすべて削除
+    Object.keys(localStorage).forEach(function(key) {
+      if (key.indexOf('issueReferenceFilter_') === 0) {
+        localStorage.removeItem(key);
+        removed.push(key);
+      }
+    });
+    if (removed.length > 0) {
+      console.log('[IssueReferences] Removed localStorage keys:', removed);
+    } else {
+      console.log('[IssueReferences] No localStorage keys found to remove.');
+    }
+  };
 })();

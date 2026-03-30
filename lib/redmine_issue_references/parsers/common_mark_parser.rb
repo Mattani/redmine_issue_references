@@ -4,9 +4,16 @@ require_relative 'parser_base'
 
 begin
   require 'commonmarker'
-  HAVE_COMMONMARKER = true
+  # commonmarker v2.x renamed the constant from CommonMarker to Commonmarker
+  COMMONMARKER_CONST = if defined?(Commonmarker)
+                         Commonmarker
+                       elsif defined?(CommonMarker)
+                         CommonMarker
+                       end
+  HAVE_COMMONMARKER = !COMMONMARKER_CONST.nil?
 rescue LoadError
   # :nocov:
+  COMMONMARKER_CONST = nil
   HAVE_COMMONMARKER = false
   # :nocov:
 end
@@ -39,7 +46,8 @@ module RedmineIssueReferences
         private
 
         def extract_with_commonmarker(text, heading_keywords)
-          nodes = collect_nodes(CommonMarker.render_doc(text.to_s, :DEFAULT))
+          doc = parse_commonmark(text.to_s)
+          nodes = collect_nodes(doc)
           sections = build_sections_from_nodes(nodes)
           merge_raw_blocks_into_sections(sections, text.to_s) if sections.any?
           attach_metadata_to_sections(sections, text.to_s) if sections.any?
@@ -48,12 +56,34 @@ module RedmineIssueReferences
 
         def collect_nodes(doc)
           nodes = []
-          n = doc.first_child
-          while n
-            nodes << n
-            n = n.next
-          end
+          each_child(doc) { |n| nodes << n }
           nodes
+        end
+
+        # Iterate over direct children of a node.
+        # v0.x has first_child/next; v2.x has first_child but no next (use each instead).
+        def each_child(node, &block)
+          if COMMONMARKER_CONST.respond_to?(:render_doc)
+            # v0.x: first_child + next
+            child = node.first_child
+            while child
+              block.call(child)
+              child = child.next
+            end
+          else
+            # v2.x: each yields direct children
+            node.each(&block)
+          end
+        end
+
+        # commonmarker v0.x: CommonMarker.render_doc(text, :DEFAULT)
+        # commonmarker v2.x: Commonmarker.parse(text)
+        def parse_commonmark(text)
+          if COMMONMARKER_CONST.respond_to?(:render_doc)
+            COMMONMARKER_CONST.render_doc(text, :DEFAULT)
+          else
+            COMMONMARKER_CONST.parse(text)
+          end
         end
 
         def build_sections_from_nodes(nodes)
@@ -187,13 +217,12 @@ module RedmineIssueReferences
           end
         end
 
-        # Recursively collect textual content from a CommonMarker::Node.
+        # Recursively collect textual content from a commonmarker Node.
         # Handles nested emphasis/code/softbreak nodes by concatenating
         # their string_content or recursing into children.
         def node_text(node)
           parts = []
-          child = node.first_child
-          while child
+          each_child(node) do |child|
             parts << case child.type
                      when :text
                        child.string_content || ''
@@ -205,7 +234,6 @@ module RedmineIssueReferences
                        # recurse for container nodes (strong, emphasis, link, etc.)
                        node_text(child)
                      end
-            child = child.next
           end
           parts.join
         end

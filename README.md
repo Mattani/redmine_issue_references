@@ -41,6 +41,8 @@ Introductory article (Japanese): [redmine_issue_references — a Redmine plugin 
    sudo systemctl restart httpd
    ```
 
+4. Open the settings page of the project you want to enable the plugin for, go to the **"Information" tab → "Modules" section**, check "Issue Reference", and save. The plugin will be activated for that project, and the "Issue Reference" tab will appear in the project settings.
+
 ## Uninstallation
 
 1. Revert plugin migration:
