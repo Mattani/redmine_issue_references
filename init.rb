@@ -9,12 +9,11 @@ Redmine::Plugin.register :redmine_issue_references do
   name 'Redmine Issue References plugin'
   author 'H.Matsutani'
   description 'Write an issue number in a Redmine Wiki page, and the issue can reverse-reference that Wiki page.'
-  version '0.9.1'
+  version '0.9.2'
   url 'https://github.com/Mattani/redmine_issue_references'
   author_url 'https://github.com/Mattani'
 
   requires_redmine version_or_higher: '5.0.0'
-
 end
 
 # フックをロード
@@ -25,16 +24,15 @@ require "#{File.dirname(__FILE__)}/lib/redmine_issue_references/projects_helper_
 
 # パッチを適用
 # Redmine 5 (Rails 6, classic autoloader): init.rb 実行時に ProjectsHelper が定義済みのためここで適用
-if defined?(ProjectsHelper)
-  ProjectsHelper.prepend RedmineIssueReferences::ProjectsHelperPatch unless
-    ProjectsHelper.ancestors.include?(RedmineIssueReferences::ProjectsHelperPatch)
+if defined?(ProjectsHelper) && !(ProjectsHelper <= RedmineIssueReferences::ProjectsHelperPatch)
+  ProjectsHelper.prepend RedmineIssueReferences::ProjectsHelperPatch
 end
 
 # Redmine 6 (Rails 7, Zeitwerk): init.rb 実行時には ProjectsHelper が未ロードのため
 # to_prepare で適用する。defined? は Zeitwerk の自動ロードをトリガーしないため
 # 定数を直接参照することで自動ロードを起動させる。
 Rails.configuration.to_prepare do
-  unless ProjectsHelper.ancestors.include?(RedmineIssueReferences::ProjectsHelperPatch)
+  unless ProjectsHelper <= RedmineIssueReferences::ProjectsHelperPatch
     ProjectsHelper.prepend RedmineIssueReferences::ProjectsHelperPatch
   end
 end

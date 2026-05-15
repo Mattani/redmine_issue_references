@@ -67,7 +67,7 @@ module RedmineIssueReferences
             # v0.x: first_child + next
             child = node.first_child
             while child
-              block.call(child)
+              yield child
               child = child.next
             end
           else

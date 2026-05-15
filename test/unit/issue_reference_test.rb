@@ -375,4 +375,52 @@ class IssueReferenceTest < ActiveSupport::TestCase
     assert_includes results, visible_reference
     assert_equal 1, results.count
   end
+
+  test "Wikiページを削除するとそのページを参照するIssueReferenceも削除される" do
+    wiki = @project.wiki || Wiki.create!(project: @project, start_page: 'Home')
+    page = WikiPage.new(wiki: wiki, title: 'DeleteTest')
+    page.content = WikiContent.new(page: page, author: User.find(1), text: "議事録 ##{@issue.id}")
+    page.save!
+
+    reference = IssueReference.create!(
+      issue_id: @issue.id,
+      wiki_page_id: page.id,
+      wiki_content_id: page.content.id,
+      text_block: "議事録 ##{@issue.id}"
+    )
+    assert IssueReference.where(id: reference.id).exists?, "前提: IssueReferenceが存在すること"
+
+    page.destroy
+
+    assert_not IssueReference.where(id: reference.id).exists?,
+               "WikiPageを削除したらIssueReferenceも削除されるべき"
+  end
+
+  test "複数チケットを参照するWikiページを削除すると全参照が削除される" do
+    wiki = @project.wiki || Wiki.create!(project: @project, start_page: 'Home')
+    page = WikiPage.new(wiki: wiki, title: 'MultiRefDeleteTest')
+    page.content = WikiContent.new(page: page, author: User.find(1), text: "refs")
+    page.save!
+
+    issue2 = Issue.find(2)
+    ref1 = IssueReference.create!(
+      issue_id: @issue.id,
+      wiki_page_id: page.id,
+      wiki_content_id: page.content.id,
+      text_block: "##{@issue.id}"
+    )
+    ref2 = IssueReference.create!(
+      issue_id: issue2.id,
+      wiki_page_id: page.id,
+      wiki_content_id: page.content.id,
+      text_block: "##{issue2.id}"
+    )
+
+    page.destroy
+
+    assert_not IssueReference.where(id: ref1.id).exists?,
+               "Issue##{@issue.id}への参照が削除されるべき"
+    assert_not IssueReference.where(id: ref2.id).exists?,
+               "Issue##{issue2.id}への参照が削除されるべき"
+  end
 end
